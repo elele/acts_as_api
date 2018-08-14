@@ -107,7 +107,7 @@ module ActsAsApi
           out          = out.as_api_response(sub_template, options)
         end
 
-        if field.to_s == 'not_key'
+        if field.to_s == 'nokey'
           api_output.merge! out
         else
           api_output[field] = out
