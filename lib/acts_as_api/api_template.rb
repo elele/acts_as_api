@@ -15,7 +15,7 @@ module ActsAsApi
 
     def initialize(api_template)
       self.api_template = api_template
-      @options ||= {}
+      @options          ||= {}
     end
 
     def merge!(other_hash, &block)
@@ -34,11 +34,16 @@ module ActsAsApi
     #  * :template - Determine the template that should be used to render the item if it is
     #    +api_accessible+ itself.
     def add(val, options = {})
-      item_key = (options[:as] || val).to_sym
+      if val.is_a?(Hash) && options[:as].blank?
+        self.merge!(val)
+      else
+        item_key = (options[:as] || val).to_sym
 
-      self[item_key] = val
+        self[item_key] = val
 
-      @options[item_key] = options
+        @options[item_key] = options
+      end
+
     end
 
     # Removes a field from the template
@@ -102,7 +107,7 @@ module ActsAsApi
 
         if out.respond_to?(:as_api_response)
           sub_template = api_template_for(fieldset, field)
-          out = out.as_api_response(sub_template, options)
+          out          = out.as_api_response(sub_template, options)
         end
 
         api_output[field] = out
@@ -113,25 +118,25 @@ module ActsAsApi
 
     private
 
-      def process_value(model, value, options)
-        case value
-        when Symbol
-          model.send(value)
-        when Proc
-          call_proc(value, model, options)
-        when String
-          value.split('.').inject(model) { |result, method| result.send(method) }
-        when Hash
-          to_response_hash(model, value)
-        end
+    def process_value(model, value, options)
+      case value
+      when Symbol
+        model.send(value)
+      when Proc
+        call_proc(value, model, options)
+      when String
+        value.split('.').inject(model) {|result, method| result.send(method)}
+      when Hash
+        to_response_hash(model, value)
       end
+    end
 
-      def call_proc(the_proc, model, options)
-        if the_proc.arity == 2
-          the_proc.call(model, options)
-        else
-          the_proc.call(model)
-        end
+    def call_proc(the_proc, model, options)
+      if the_proc.arity == 2
+        the_proc.call(model, options)
+      else
+        the_proc.call(model)
       end
+    end
   end
 end
