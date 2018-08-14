@@ -34,15 +34,12 @@ module ActsAsApi
     #  * :template - Determine the template that should be used to render the item if it is
     #    +api_accessible+ itself.
     def add(val, options = {})
-      if val.is_a?(Hash) && options[:as].blank?
-        self.merge!(val)
-      else
-        item_key = (options[:as] || val).to_sym
 
-        self[item_key] = val
+      item_key = (options[:as] || val).to_sym
 
-        @options[item_key] = options
-      end
+      self[item_key] = val
+
+      @options[item_key] = options
 
     end
 
@@ -110,7 +107,12 @@ module ActsAsApi
           out          = out.as_api_response(sub_template, options)
         end
 
-        api_output[field] = out
+        if field.to_s = 'not_key'
+          api_output.merge! out
+        else
+          api_output[field] = out
+        end
+
       end
 
       api_output
