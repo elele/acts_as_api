@@ -37,9 +37,16 @@ module ActsAsApi
 
       item_key = (options[:as] || val).to_sym
 
-      self[item_key] = val
+      if options[:as].present? && options[:as].to_s == 'nokey'
+        self[item_key] ||= []
+        self[item_key] << val
+        @options[item_key] = options
+      else
+        self[item_key] = val
 
-      @options[item_key] = options
+        @options[item_key] = options
+      end
+
 
     end
 
@@ -96,17 +103,24 @@ module ActsAsApi
     # template for the passed model instance.
     def to_response_hash(model, fieldset = self, options = {})
       api_output = {}
-
+      out        = {}
       fieldset.each do |field, value|
         next unless allowed_to_render?(fieldset, field, model, options)
 
-        out = process_value(model, value, options)
+        if field.to_s == 'nokey'
+          value.each do |val|
+            out.merge!(process_value(model, val, options))
+          end
+        else
+          out = process_value(model, value, options)
+        end
 
         if out.respond_to?(:as_api_response)
           sub_template = api_template_for(fieldset, field)
           out          = out.as_api_response(sub_template, options)
         end
 
+        
         if field.to_s == 'nokey'
           api_output.merge! out
         else
