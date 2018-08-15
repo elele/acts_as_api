@@ -35,17 +35,18 @@ module ActsAsApi
     #    +api_accessible+ itself.
     def add(val, options = {})
 
-      item_key = (options[:as] || val).to_sym
-
-      if options[:as].present? && options[:as].to_s == 'nokey'
-        self[item_key] ||= []
-        self[item_key] << val
-        @options[item_key] = options
-      else
-        self[item_key] = val
-
-        @options[item_key] = options
-      end
+      item_key       = (options[:as] || val).to_sym
+      self[item_key] ||= []
+      self[item_key] << val
+      @options[item_key] = options
+      # if options[:as].present? && options[:as].to_s == 'nokey'
+      #   self[item_key] << val
+      #   @options[item_key] = options
+      # else
+      #   self[item_key] = val
+      #
+      #   @options[item_key] = options
+      # end
 
 
     end
@@ -107,9 +108,14 @@ module ActsAsApi
       fieldset.each do |field, value|
         next unless allowed_to_render?(fieldset, field, model, options)
 
-        if field.to_s == 'nokey'
+        if value.is_a?(Array)
           value.each do |val|
-            out.merge!(process_value(model, val, options))
+            result = process_value(model, val, options)
+            if result.is_a?(Hash)
+              out.merge!(result)
+            else
+              out.merge!({field => result})
+            end
           end
         else
           out = process_value(model, value, options)
@@ -120,12 +126,12 @@ module ActsAsApi
           out          = out.as_api_response(sub_template, options)
         end
 
-        
-        if field.to_s == 'nokey'
-          api_output.merge! out
-        else
-          api_output[field] = out
-        end
+
+        # if field.to_s == 'nokey'
+        api_output.merge! out
+        # else
+        #   api_output[field] = out
+        # end
 
       end
 
